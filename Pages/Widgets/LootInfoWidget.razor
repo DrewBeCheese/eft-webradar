@@ -147,7 +147,7 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th @onclick="@(() => isDesc = !isDesc)">Price @(isDesc ? "▼" : "▲")</th>
+                            <th style="cursor: pointer" @onclick="@(() => isDesc = !isDesc)">Price @(isDesc ? "▼" : "▲")</th>
                             <th>Hide (Items Hidden: @LootFilter.ExcludedItems.Count)</th>
                         </tr>
                     </thead>
