@@ -156,8 +156,17 @@
                         {
 
                             <tr style="@IsSelected(loot)">
-                                <td style="cursor: help" 
-                                onclick="@(() => LootFilter.SelectedItemId = LootFilter.SelectedItemId != loot.Id ? loot.Id : null)">
+                                <td style="cursor: help" onclick="@(() =>
+                                    {
+                                        if (LootFilter.SelectedItemId != loot.Id)
+                                        {
+                                            LootFilter.SelectedItemId = loot.Id;
+                                        } else
+                                        {
+                                            LootFilter.SelectedItemId = null;
+                                        }
+                                    }
+                                )">
                                     @(loot.ShortName.StartsWith("NULL") ? "Backpack" : loot.ShortName)
                                 </td>
                                 <td>@loot.Price</td>

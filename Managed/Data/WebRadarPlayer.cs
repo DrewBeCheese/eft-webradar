@@ -240,7 +240,10 @@ namespace AncientMountain.Managed.Data
             var heightDiff = Position.Y - localPlayer.Position.Y;
             float size = 6 * RadarService.Scale;
 
-            canvas.DrawCircle(point, size, SKPaints.ShapeOutline); // Draw outline
+            var circleOutline = SKPaints.ShapeOutline;
+            circleOutline.StrokeWidth = 2f;
+
+            canvas.DrawCircle(point, size, circleOutline); // Draw outline
             canvas.DrawCircle(point, size, markerPaint);
 
             var radians = MapRotation.ToRadians();
