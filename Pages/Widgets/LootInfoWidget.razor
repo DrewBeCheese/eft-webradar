@@ -11,6 +11,7 @@
     private float WidgetX = 400;  // ✅ Default position (X)
     private float WidgetY = 200;  // ✅ Default position (Y)
     private float OffsetX, OffsetY;
+    private bool isDesc = true;
 
     [Parameter] public bool LootWidget { get; set; }
     [Parameter] public IEnumerable<WebRadarLoot> LootData { get; set; }
@@ -146,26 +147,19 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Price</th>
+                            <th @onclick="@(() => isDesc = !isDesc)">Price @(isDesc ? "▼" : "▲")</th>
                             <th>Hide (Items Hidden: @LootFilter.ExcludedItems.Count)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var loot in FilteredLoot)
+                        @foreach (var loot in isDesc ? FilteredLoot.OrderByDescending(x => x.Price) : FilteredLoot.OrderBy(x => x.Price))
                         {
 
                             <tr style="@IsSelected(loot)">
-                                <td style="cursor: help" onclick="@(() =>
-                                    { 
-                                        if (LootFilter.SelectedItemId != loot.Id)
-                                        {
-                                            LootFilter.SelectedItemId = loot.Id;
-                                        } else 
-                                        {
-                                            LootFilter.SelectedItemId = null;
-                                        }
-                                    }
-                                )">@(loot.ShortName.StartsWith("NULL") ? "Backpack" : loot.ShortName)</td>
+                                <td style="cursor: help" 
+                                onclick="@(() => LootFilter.SelectedItemId = LootFilter.SelectedItemId != loot.Id ? loot.Id : null)">
+                                    @(loot.ShortName.StartsWith("NULL") ? "Backpack" : loot.ShortName)
+                                </td>
                                 <td>@loot.Price</td>
                                 <td style="color: red; cursor: pointer" @onclick="@(() => {LootFilter.ExcludedItems.Add(loot.Id);})">Remove</td>
                             </tr>
