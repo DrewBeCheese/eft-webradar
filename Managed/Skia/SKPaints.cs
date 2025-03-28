@@ -25,7 +25,7 @@ namespace AncientMountain.Managed.Skia
 
         public static SKPaint PaintPlayerBoss { get; } = new()
         {
-            Color = SKColors.Green,
+            Color = SKColors.Purple,
             StrokeWidth = 3,
             Style = SKPaintStyle.Stroke,
             IsAntialias = true,

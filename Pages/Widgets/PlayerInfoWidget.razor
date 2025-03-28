@@ -1,5 +1,8 @@
 @using System.Numerics
+@using AncientMountain.Managed
 @using AncientMountain.Managed.Data
+@using System.Text.Json
+@using System.Text.Json.Serialization
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -10,6 +13,10 @@
     private float WidgetY = 300;  // ✅ Default position (Y)
     private float OffsetX, OffsetY;
     private float WidgetWidth = 300; // ✅ Dynamic width
+    private HashSet<string> SearchItems = new();
+    private string SearchString = null;
+    private List<string> AllSuggestions;
+    private List<string> FilteredSuggestions = new();
 
     private List<WebRadarPlayer> Players = new();
     private WebRadarPlayer LocalPlayer = new();
@@ -27,16 +34,18 @@
 
     protected override void OnParametersSet()
     {
+        Utils.LoadAllItemData();
+        AllSuggestions = Utils.AllItems?.Items.Select(x => x.ShortName).Distinct().ToList();
         if (PlayerData is not null && CurrentPlayer is not null)
         {
             LocalPlayer = CurrentPlayer;
-    
+
             // ✅ Exclude local player and filter out players named "Scav" or "Sniper"
             Players = PlayerData
                 .Where(p => p.Name != LocalPlayer.Name && !p.Name.Contains("Scav") && !p.Name.Contains("Sniper"))
                 .OrderBy(p => Vector3.Distance(LocalPlayer.Position, p.Position))
                 .ToList();
-    
+
             // ✅ Adjust width dynamically
             AdjustWidgetWidth();
         }
@@ -46,7 +55,7 @@
     private void AdjustWidgetWidth()
     {
         float maxColumnWidth = 0;
-    
+
         foreach (var player in Players)
         {
             maxColumnWidth = Math.Max(maxColumnWidth, MeasureTextWidth(player.Name));
@@ -57,7 +66,7 @@
             maxColumnWidth = Math.Max(maxColumnWidth, MeasureTextWidth(GetShortenedWeapon(player.PrimaryWeapon)));
             maxColumnWidth = Math.Max(maxColumnWidth, MeasureTextWidth($"{(int)Math.Round(Vector3.Distance(LocalPlayer.Position, player.Position))}m"));
         }
-    
+
         WidgetWidth = Math.Clamp(maxColumnWidth + 200, 350, 850); // ✅ More padding, min 350px, max 850px
     }
 
@@ -126,17 +135,59 @@
         var result = await JS.InvokeAsync<float?>("loadSetting", key);
         return result ?? defaultValue;
     }
+
+    private string HasItem(WebRadarPlayer player)
+    {
+        foreach (var item in player.Loot)
+        {
+            if (SearchItems.TryGetValue(item.ShortName, out _))
+            {
+                return "color: green;";
+            }
+        }
+        return null;
+    }
+
+    private void TypeAheadChange()
+    {
+        if (!string.IsNullOrEmpty(SearchString))
+        {
+            Console.WriteLine(AllSuggestions.Count);
+            FilteredSuggestions = AllSuggestions
+                .Where(s => s.Contains(SearchString, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        else
+        {
+            FilteredSuggestions.Clear();
+        }
+    }
+
+    private void UpdateSelectedItems(string itemName)
+    {
+        if (IsChecked(itemName))
+        {
+            SearchItems.Remove(itemName);
+        } else
+        {
+            SearchItems.Add(itemName);
+        }
+    }
+
+    private bool IsChecked(string item)
+    {
+        return SearchItems.TryGetValue(item, out _);
+    }
 }
 
 @if (PlayerWidget)
 {
     <div class="widget-container"
-         style="left:@(WidgetX + "px"); top:@(WidgetY + "px"); width:@(WidgetWidth + "px"); position: absolute;"
-         @onmousedown="OnMouseDown"
-         @onmousemove="OnMouseMove"
-         @onmouseup="OnMouseUp"
-         @onmouseleave="OnMouseUp">
-    
+    style="left:@(WidgetX + "px"); top:@(WidgetY + "px"); width:@(WidgetWidth + "px"); position: absolute;"
+    @onmousedown="OnMouseDown"
+    @onmousemove="OnMouseMove"
+    @onmouseup="OnMouseUp"
+    @onmouseleave="OnMouseUp">
         <div class="widget-header">
             <span>Player Info</span>
             <button class="minimize-btn" @onclick="ToggleMinimize">_</button>
@@ -145,6 +196,24 @@
         @if (!Minimized)
         {
             <div class="widget-body">
+                <p>Currently Searching for @SearchItems.Count items</p>
+                <input type="text" @bind="SearchString" @bind:event="oninput" @onchange="TypeAheadChange" class=" input-box" placeholder="Search in players' inventory" />
+                @if (SearchItems.Count > 0)
+                {
+                    <button @onclick="() => SearchItems.Clear()">Clear Items</button>
+                }
+                @if (FilteredSuggestions.Any())
+                {
+                    <ul class="suggestion-list">
+                        @foreach (var suggestion in FilteredSuggestions)
+                        {
+                            <div style="display:flex;">
+                                <input id="@suggestion" type="checkbox" checked="@IsChecked(suggestion)" @oninput="() => UpdateSelectedItems(suggestion)">
+                                <label style="color:black" for="@suggestion">@suggestion</label>
+                            </div>
+                        }
+                    </ul>
+                }
                 <table>
                     <thead>
                         <tr>
@@ -160,7 +229,7 @@
                     <tbody>
                         @foreach (var player in Players)
                         {
-                            <tr>
+                            <tr style="@HasItem(player)">
                                 <td>@player.Name</td>
                                 <td>@player.Type</td>
                                 <td>@player.Value</td>

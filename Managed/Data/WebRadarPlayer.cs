@@ -52,6 +52,8 @@ namespace AncientMountain.Managed.Data
         [Key(14)] public float TotalHoursPlayed { get; init; }
         [Key(15)] public bool IsAiming { get; init; }
         [Key(16)] public float ZoomLevel { get; init; }
+        [Key(17)] public IEnumerable<WebRadarLoot> Loot { get; init; }
+
         /// <summary>
         /// Player has exfil'd/left the raid.
         /// </summary>
@@ -247,7 +249,7 @@ namespace AncientMountain.Managed.Data
             canvas.DrawCircle(point, size, markerPaint);
 
             var radians = MapRotation.ToRadians();
-            int aimlineLength = 15;
+            int aimlineLength = this.Name == localPlayer.Name ? 40 : 15;
             var aimlineEnd = GetAimlineEndpoint(point, radians, aimlineLength);
 
             canvas.DrawLine(point, aimlineEnd, SKPaints.ShapeOutline);

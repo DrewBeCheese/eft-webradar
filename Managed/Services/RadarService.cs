@@ -80,7 +80,8 @@ namespace AncientMountain.Managed.Services
         }
         private SKPoint _mousePosition = new SKPoint(0, 0);
 
-        public void Render(SKPaintSurfaceEventArgs args, string localPlayerName, float panX, float panY, IEnumerable<WebRadarLoot> filteredLoot, LootFilterService lootFilter)
+        public void Render(SKPaintSurfaceEventArgs args, string localPlayerName, float panX, float panY,
+            IEnumerable<WebRadarLoot> filteredLoot, LootFilterService lootFilter)
         {
             var info = args.Info;
             var canvas = args.Surface.Canvas;

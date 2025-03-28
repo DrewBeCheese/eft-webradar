@@ -273,12 +273,53 @@ th, td {
     cursor: pointer; /* Changes cursor to pointer on hover */
 }
 
-    .rounded-button:hover {
-        background-color: #0056b3; /* Darker background on hover */
-    }
+.rounded-button:hover {
+    background-color: #0056b3; /* Darker background on hover */
+}
 
-    .rounded-button:disabled {
-        background-color: #cccccc; /* Gray out the button */
-        color: #666666; /* Change text color to a darker gray */
-        cursor: progress; /* Change cursor to progress */
+.rounded-button:disabled {
+    background-color: #cccccc; /* Gray out the button */
+    color: #666666; /* Change text color to a darker gray */
+    cursor: progress; /* Change cursor to progress */
+}
+
+.typeahead-container {
+    position: relative;
+    width: 300px;
+    margin: 0 auto;
+}
+
+.input-box {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.suggestion-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-top: none;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+    .suggestion-item:hover {
+        background-color: #f1f1f1;
     }
