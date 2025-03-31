@@ -34,10 +34,10 @@
 
     protected override void OnParametersSet()
     {
-        Utils.LoadAllItemData();
-        AllSuggestions = Utils.AllItems?.Items.Select(x => x.ShortName).Distinct().ToList();
         if (PlayerData is not null && CurrentPlayer is not null)
         {
+            Utils.LoadAllItemData();
+            AllSuggestions = Utils.AllItems?.Items.Select(x => x.ShortName).Distinct().ToList();
             LocalPlayer = CurrentPlayer;
 
             // ✅ Exclude local player and filter out players named "Scav" or "Sniper"
@@ -136,15 +136,22 @@
         return result ?? defaultValue;
     }
 
+    //Have to check if this actually works
     private string HasItem(WebRadarPlayer player)
     {
-        foreach (var item in player.Loot)
+        try
         {
-            if (SearchItems.TryGetValue(item.ShortName, out _))
+            foreach (var item in player.Loot)
             {
-                return "color: green;";
+                if (SearchItems.TryGetValue(item.ShortName, out _))
+                {
+                    return "color: green;";
+                }
             }
+            return null;
         }
+        catch (Exception e) {}
+
         return null;
     }
 
@@ -152,7 +159,6 @@
     {
         if (!string.IsNullOrEmpty(SearchString))
         {
-            Console.WriteLine(AllSuggestions.Count);
             FilteredSuggestions = AllSuggestions
                 .Where(s => s.Contains(SearchString, StringComparison.OrdinalIgnoreCase))
                 .ToList();

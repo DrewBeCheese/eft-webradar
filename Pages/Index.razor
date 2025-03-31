@@ -22,10 +22,10 @@
     </div>
 }
 <div class="canvas-container"
-     @onwheel="OnMouseWheel"
-     @onmousedown="OnMouseDown"
-     @onmousemove="OnMouseMove"
-     @onmouseup="OnMouseUp">
+@onwheel="OnMouseWheel"
+@onmousedown="OnMouseDown"
+@onmousemove="OnMouseMove"
+@onmouseup="OnMouseUp">
     <div class="connection-controls">
         <label title="IP Address/Hostname of Web Radar Server (WAN IP).">Server IP/Host: </label>
         <input type="text" @bind="host" class="host-input" maxlength="128" spellcheck="false" />
@@ -65,6 +65,10 @@
             <label title="Enable Misc Widget for additional information.">Misc Widget</label>
         </span>
         <a class="rounded-button" href="@($"{Navigation.BaseUri}ESP?host={host}&port={port}&password={password}")" target="_blank" rel="noopener noreferrer">Open ESP</a>
+        @if(false)
+        {
+            <p>Local Player Location: X = @RadarService.PlayerLocation.X | Y = @RadarService.PlayerLocation.Y | Z = @RadarService.PlayerLocation.Z | @RadarService.PlayerLocation </p>
+        }
     </div>
     <div class="canvas-wrapper">
         <SkiaSharp.Views.Blazor.SKCanvasView OnPaintSurface="OnPaintSurface" class="skia-canvas" EnableRenderLoop="true" />

@@ -45,6 +45,7 @@ namespace AncientMountain.Managed.Services
         public static ESPUiConfig espUiConfig { get; set; } = new ESPUiConfig();
         public static IEnumerable<WebRadarLoot> filteredLoot { get; set; }
         public static IEnumerable<string> playerNames { get; set; }
+        public Vector3 PlayerLocation { get; set; }
 
         private static float _scale = 1f;
         /// <summary>
@@ -127,6 +128,7 @@ namespace AncientMountain.Managed.Services
                             canvas.DrawImage(map.Image, mapParams.Bounds, mapCanvasBounds, SKPaints.PaintBitmap);
                             // Draw LocalPlayer
                             localPlayer.Draw(canvas, info, mapParams, localPlayer, _mousePosition);
+                            PlayerLocation = localPlayer.Position;
 
                             // Draw other players
                             var allPlayers = data.Players.Where(x => !x.HasExfild && x != localPlayer);
