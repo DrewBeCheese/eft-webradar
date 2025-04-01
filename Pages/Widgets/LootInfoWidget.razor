@@ -195,7 +195,7 @@
                                 )">
                                     @if (IsInLockedRoom(loot))
                                     {
-                                        <span title="Item may be in a locked room" style="color: yellow">&#9888;</span>
+                                        <span title="Item may be in a locked room" style="color: yellow; font-size: 20px">&#9888; </span>
                                     }
                                     @(loot.ShortName.StartsWith("NULL") ? "Backpack" : loot.ShortName)
                                 </td>
