@@ -26,6 +26,7 @@
 	  <Content Remove="Maps\Shoreline.json" />
 	  <Content Remove="Maps\Streets.json" />
 	  <Content Remove="Maps\Woods.json" />
+	  <Content Remove="Maps\Labyrinth.json" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -48,6 +49,7 @@
 	  <None Include="Maps\Shoreline.json" />
 	  <None Include="Maps\Streets.json" />
 	  <None Include="Maps\Woods.json" />
+	  <None Include="Maps\Labyrinth.json" />
 	</ItemGroup>
 
 	<ItemGroup>

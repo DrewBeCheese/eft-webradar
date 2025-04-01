@@ -39,7 +39,8 @@ namespace AncientMountain.Managed.Services
             { "lighthouse", "Lighthouse" },
             { "tarkovstreets", "Streets" },
             { "Sandbox", "Ground Zero" },
-            { "Sandbox_high", "Ground Zero" }
+            { "Sandbox_high", "Ground Zero" },
+            { "Labyrinth", "Labyrinth" }
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
         public static ESPUiConfig espUiConfig { get; set; } = new ESPUiConfig();
