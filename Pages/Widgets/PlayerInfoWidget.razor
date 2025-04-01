@@ -141,10 +141,8 @@
     {
         try
         {
-            Console.WriteLine(player.Name);
             foreach (var item in player.Loot)
             {
-                Console.WriteLine(item.ShortName);
                 if (SearchItems.TryGetValue(item.ShortName, out _))
                 {
                     return "color: green;";

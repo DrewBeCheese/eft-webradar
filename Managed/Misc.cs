@@ -163,6 +163,14 @@ namespace AncientMountain.Managed
                 AllItems = JsonSerializer.Deserialize<TarkovMarketData>(Trash, jsonOptions);
             }
         }
+
+        public static Dictionary<string, List<(Vector3 min, Vector3 max)>> LockedRooms { get; set; } = new()
+        {
+            { "CUSTOMS", [(new(180, 5.68f, 181), new(187, 10, 184.5f))] },
+            { "", [] }
+        };
+
+
     }
     public static class Extensions
     {

@@ -1,6 +1,7 @@
 @using System.Numerics
 @using AncientMountain.Managed.Data
 @using AncientMountain.Managed.Services
+@using AncientMountain.Managed
 @inject NavigationManager Navigation
 @inject LootFilterService LootFilter
 @inject IJSRuntime JS
@@ -15,6 +16,7 @@
 
     [Parameter] public bool LootWidget { get; set; }
     [Parameter] public IEnumerable<WebRadarLoot> LootData { get; set; }
+    [Parameter] public RadarService.Map CurrentMap { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,6 +78,30 @@
     public string IsSelected(WebRadarLoot loot) 
     {
         return LootFilter.SelectedItemId == loot.Id ? "color: green;" : null;
+    }
+
+    public bool IsInLockedRoom(WebRadarLoot loot)
+    {
+        Utils.LockedRooms.TryGetValue(CurrentMap.Name, out var rooms);
+        if (rooms != null)
+        {
+            foreach (var room in rooms)
+            {
+                var isInRoom =
+                loot.Position.X >= room.min.X &&
+                loot.Position.X <= room.max.X &&
+                loot.Position.Y >= room.min.Y &&
+                loot.Position.Y <= room.max.Y &&
+                loot.Position.Z >= room.min.Z &&
+                loot.Position.Z <= room.max.Z;
+
+                if (isInRoom)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private async Task SaveFilterSettings()
@@ -156,7 +182,7 @@
                         {
 
                             <tr style="@IsSelected(loot)">
-                                <td style="cursor: help" onclick="@(() =>
+                                <td onclick="@(() =>
                                     {
                                         if (LootFilter.SelectedItemId != loot.Id)
                                         {
@@ -167,6 +193,10 @@
                                         }
                                     }
                                 )">
+                                    @if (IsInLockedRoom(loot))
+                                    {
+                                        <span title="Item may be in a locked room" style="color: yellow">&#9888;</span>
+                                    }
                                     @(loot.ShortName.StartsWith("NULL") ? "Backpack" : loot.ShortName)
                                 </td>
                                 <td>@loot.Price</td>

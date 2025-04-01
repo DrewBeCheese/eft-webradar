@@ -45,6 +45,7 @@ namespace AncientMountain.Managed.Services
         public static ESPUiConfig espUiConfig { get; set; } = new ESPUiConfig();
         public static IEnumerable<WebRadarLoot> filteredLoot { get; set; }
         public static IEnumerable<string> playerNames { get; set; }
+        public Map CurrentMap { get; set; }
         public Vector3 PlayerLocation { get; set; }
 
         private static float _scale = 1f;
@@ -110,6 +111,8 @@ namespace AncientMountain.Managed.Services
                         {                            
                             if (!_maps.TryGetValue(mapID, out var map))
                                 map = _maps["default"];
+
+                            CurrentMap = map;
                             var localPlayer = data.Players.FirstOrDefault(x => x.Name?.Equals(localPlayerName, StringComparison.OrdinalIgnoreCase) ?? false);
                             localPlayer ??= data.Players.FirstOrDefault();
                             if (localPlayer is null)
