@@ -47,7 +47,9 @@ namespace AncientMountain.Managed.Services
         public static IEnumerable<WebRadarLoot> filteredLoot { get; set; }
         public static IEnumerable<string> playerNames { get; set; }
         public Map CurrentMap { get; set; }
+        public MapParameters CurrentMapParams { get; set; }
         public Vector3 PlayerLocation { get; set; }
+        public bool ShowInteractables { get; set; }
 
         private static float _scale = 1f;
         /// <summary>
@@ -81,14 +83,16 @@ namespace AncientMountain.Managed.Services
             _sr = sr;
             LoadMaps(ref _maps);
         }
-        private SKPoint _mousePosition = new SKPoint(0, 0);
+        private SKPoint _mousePosition = new SKPoint(0, 0); //TODO: Update this each tick
 
         public void Render(SKPaintSurfaceEventArgs args, string localPlayerName, float panX, float panY,
-            IEnumerable<WebRadarLoot> filteredLoot, LootFilterService lootFilter)
+            IEnumerable<WebRadarLoot> filteredLoot, LootFilterService lootFilter, double mouseX, double mouseY)
         {
             var info = args.Info;
             var canvas = args.Surface.Canvas;
             canvas.Clear(SKColors.Black);
+            _mousePosition.X = (float)mouseX;
+            _mousePosition.Y = (float)mouseY;
 
             try
             {
@@ -121,6 +125,7 @@ namespace AncientMountain.Managed.Services
                             var localPlayerPos = localPlayer.Position;
                             var localPlayerMapPos = localPlayerPos.ToMapPos(map);
                             var mapParams = GetMapParameters(info, map, localPlayerMapPos); // Map auto follow LocalPlayer
+                            CurrentMapParams = mapParams;
                             var mapCanvasBounds = new SKRect() // Drawing Destination
                             {
                                 Left = info.Rect.Left,
@@ -130,6 +135,7 @@ namespace AncientMountain.Managed.Services
                             };
                             // Draw Game Map
                             canvas.DrawImage(map.Image, mapParams.Bounds, mapCanvasBounds, SKPaints.PaintBitmap);
+
                             // Draw LocalPlayer
                             localPlayer.Draw(canvas, info, mapParams, localPlayer, _mousePosition);
                             PlayerLocation = localPlayer.Position;
@@ -139,6 +145,20 @@ namespace AncientMountain.Managed.Services
                             foreach (var player in allPlayers)
                             {
                                 player.Draw(canvas, info, mapParams, localPlayer, _mousePosition);
+                            }
+
+                            if (ShowInteractables)
+                            {
+                                foreach (var door in data.Doors.Where(x => x.KeyId != null && x.KeyId.Length > 0))
+                                {
+                                    door.DrawDoor(canvas, mapParams, _mousePosition, localPlayer);
+                                }
+                            }
+
+                            var group = data.Players.Where(x => x.GroupId != -1 && x.IsActive && !x.HasExfild).GroupBy(x => x.GroupId);
+                            foreach (var playerGroup in group)
+                            {
+                                DrawGroupLine(canvas, playerGroup.ToList(), map, mapParams);
                             }
 
                             playerNames = data.Players.Where(x => x.Type == WebPlayerType.LocalPlayer || x.Type == WebPlayerType.Player || x.Type == WebPlayerType.Teammate).Select(x => x.Name);
@@ -169,6 +189,19 @@ namespace AncientMountain.Managed.Services
             catch { }
 
             canvas.Flush();
+        }
+
+        public void DrawGroupLine(SKCanvas canvas, List<WebRadarPlayer> groupedPlayers, Map map, MapParameters mapParameters)
+        {
+            if (groupedPlayers.Count < 0)
+                return;
+
+            for (int i = 0; i < groupedPlayers.Count - 1; i++)
+            {
+                var point1 = groupedPlayers[i].Position.ToMapPos(map).ToZoomedPos(mapParameters);
+                var point2 = groupedPlayers[i + 1].Position.ToMapPos(map).ToZoomedPos(mapParameters);
+                canvas.DrawLine(point1, point2, SKPaints.PaintConnectorGroup);
+            }
         }
 
         public void RenderESP(SKPaintSurfaceEventArgs args, string localPlayerName, IEnumerable<WebRadarLoot> filteredLoot)

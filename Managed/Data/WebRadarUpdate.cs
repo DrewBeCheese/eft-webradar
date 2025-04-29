@@ -37,5 +37,8 @@ namespace AncientMountain.Managed.Data
 
         [Key(5)]
         public DateTime SendTime { get; set; }
+
+        [Key(6)]
+        public IEnumerable<WebRadarDoor> Doors { get; set; } = null;
     }
 }

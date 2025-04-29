@@ -53,6 +53,7 @@ namespace AncientMountain.Managed.Data
         [Key(15)] public bool IsAiming { get; init; }
         [Key(16)] public float ZoomLevel { get; init; }
         [Key(17)] public IEnumerable<WebRadarLoot> Loot { get; init; }
+        [Key(18)] public int GroupId { get; init; } //TODO: DRAW lines to groups
 
         /// <summary>
         /// Player has exfil'd/left the raid.
@@ -134,57 +135,19 @@ namespace AncientMountain.Managed.Data
         {
             var lines = new List<string>
             {
-                $"🎯 {this.Name}",
-                $"🔫 Primary: {PrimaryWeapon}",
-                $"🔫 Secondary: {SecondaryWeapon}",
-                $"🛡️ Armor: {Armor}",
-                $"⛑️ Helmet: {Helmet}",
-                $"🎒 Backpack: {Backpack}",
-                $"🦺 Rig: {Rig}",
-                $"💰 Value: {Value}",
-                $"⚔️ KD: {KD:F2}",
-                $"⏳ Hours Played: {TotalHoursPlayed:F1}"
+                $"{this.Name}",
+                $"Primary: {PrimaryWeapon}",
+                $"Secondary: {SecondaryWeapon}",
+                $"Armor: {Armor}",
+                $"Helmet: {Helmet}",
+                $"Backpack: {Backpack}",
+                $"Rig: {Rig}",
+                $"Value: {Value}",
+                $"KD: {KD:F2}",
+                $"Hours Played: {TotalHoursPlayed:F1}"
             };
 
-            float padding = 8 * RadarService.Scale;
-            float textHeight = (lines.Count + 1) * 16 * RadarService.Scale;
-            float maxWidth = lines.Max(line => SKPaints.TextBasic.MeasureText(line)) + padding * 2;
-
-            SKRect backgroundRect = new SKRect(
-                position.X,
-                position.Y,
-                position.X + maxWidth,
-                position.Y + textHeight
-            );
-
-            // ✅ Draw Background
-            using (var backgroundPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(200),
-                Style = SKPaintStyle.Fill
-            })
-            {
-                canvas.DrawRoundRect(backgroundRect, 6 * RadarService.Scale, 6 * RadarService.Scale, backgroundPaint);
-            }
-
-            // ✅ Draw Border
-            using (var borderPaint = new SKPaint
-            {
-                Color = SKColors.White,
-                StrokeWidth = 2,
-                Style = SKPaintStyle.Stroke
-            })
-            {
-                canvas.DrawRoundRect(backgroundRect, 6 * RadarService.Scale, 6 * RadarService.Scale, borderPaint);
-            }
-
-            // ✅ Draw Text
-            float textY = position.Y + padding;
-            foreach (var line in lines)
-            {
-                textY += 16 * RadarService.Scale;
-                canvas.DrawText(line, position.X + padding, textY, SKPaints.TextBasic);
-            }
+            CanvasHelper.DrawInfoCard(canvas, position, lines);
         }
 
         public void DrawESP(SKCanvas canvas, WebRadarPlayer localPlayer, ESPUiConfig espConfig)

@@ -14,6 +14,15 @@ namespace AncientMountain.Managed.Skia
             Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
         };
 
+        public static SKPaint PaintConnectorGroup { get; } = new()
+        {
+            Color = SKColors.LawnGreen.WithAlpha(60),
+            StrokeWidth = 2.25f,
+            Style = SKPaintStyle.Stroke,
+            IsAntialias = true,
+            FilterQuality = SKFilterQuality.Medium
+        };
+
         public static SKPaint PaintLocalPlayer { get; } = new()
         {
             Color = SKColors.Green,
@@ -21,6 +30,22 @@ namespace AncientMountain.Managed.Skia
             Style = SKPaintStyle.Stroke,
             IsAntialias = true,
             FilterQuality = SKFilterQuality.Medium
+        };
+
+        public static SKPaint InfoOutline { get; } = new()
+        {
+            Color = SKColors.DarkBlue,
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 2f
+        };
+
+        public static SKPaint InfoText { get; } = new()
+        {
+            Color = SKColors.DarkBlue,
+            IsAntialias = true,
+            TextSize = 14 * RadarService.Scale,
+            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
         };
 
         public static SKPaint PaintPlayerBoss { get; } = new()

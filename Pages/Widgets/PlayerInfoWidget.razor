@@ -36,7 +36,7 @@
     {
         if (PlayerData is not null && CurrentPlayer is not null)
         {
-            Utils.LoadAllItemData();
+            Utils.GetAllItemData();
             AllSuggestions = Utils.AllItems?.Items.Select(x => x.ShortName).Distinct().ToList();
             LocalPlayer = CurrentPlayer;
 
@@ -143,6 +143,7 @@
         {
             foreach (var item in player.Loot)
             {
+                Console.WriteLine($"{player.Name}: {item.ShortName}");
                 if (SearchItems.TryGetValue(item.ShortName, out _))
                 {
                     return "color: green;";

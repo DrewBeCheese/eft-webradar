@@ -56,6 +56,11 @@
         </span>
 
         <span class="checkbox-group">
+            <input type="checkbox" @bind="RadarService.ShowInteractables" />
+            <label title="Enable Interactable Icons">Show Interactables</label>
+        </span>
+
+        <span class="checkbox-group">
             <input type="checkbox" @bind="LootWidget" />
             <label title="Enable Loot Widget for additional information.">Loot Widget</label>
         </span>
@@ -65,33 +70,38 @@
             <label title="Enable Misc Widget for additional information.">Misc Widget</label>
         </span>
         <a class="rounded-button" href="@($"{Navigation.BaseUri}ESP?host={host}&port={port}&password={password}")" target="_blank" rel="noopener noreferrer">Open ESP</a>
-        @if(false)
-        {
-            <p>Local Player Location: X = @RadarService.PlayerLocation.X | Y = @RadarService.PlayerLocation.Y | Z = @RadarService.PlayerLocation.Z | @RadarService.PlayerLocation </p>
-        }
+        @* @if(true) *@
+        @* { *@
+        @*     <p>MouseX = @currentMouseX | Y = @currentMouseY</p> *@
+        @* } *@
+        @* @if (true && RadarService.CurrentMap != null && RadarService.CurrentMapParams != null) *@
+        @* { *@
+        @*     <p>Local Player Location: X = @RadarService.PlayerLocation.X | Y = @RadarService.PlayerLocation.Y | Z = @RadarService.PlayerLocation.Z | *@
+        @*         @RadarService.PlayerLocation.ToMapPos(RadarService.CurrentMap).ToZoomedPos(RadarService.CurrentMapParams) </p> *@
+        @* } *@
     </div>
-    <div class="canvas-wrapper">
+    <div @onmousemove="@mouseMoved" class="canvas-wrapper">
         <SkiaSharp.Views.Blazor.SKCanvasView OnPaintSurface="OnPaintSurface" class="skia-canvas" EnableRenderLoop="true" />
     </div>
 </div>
 <p>LootWidget State: @(LootWidget ? "Enabled" : "Disabled")</p>
 
-    @if (LootWidget)
-    {
-        <LootInfoWidget LootWidget="LootWidget"
-                        LootData="SignalRService.Data?.Loot" CurrentMap="RadarService.CurrentMap" />
+@if (LootWidget)
+{
+    <LootInfoWidget LootWidget="LootWidget"
+    LootData="SignalRService.Data?.Loot" CurrentMap="RadarService.CurrentMap" />
 
-    }
-    @if (MiscWidget)
-    {
-        <MiscInfoWidget MiscWidget="MiscWidget" />
-    }
-    @if (PlayerWidget)
-    {
-        <PlayerInfoWidget PlayerWidget="PlayerWidget"
-                          PlayerData="SignalRService.Data?.Players"
-                          CurrentPlayer="GetLocalPlayer()" />
-    }
+}
+@if (MiscWidget)
+{
+    <MiscInfoWidget MiscWidget="MiscWidget" />
+}
+@if (PlayerWidget)
+{
+    <PlayerInfoWidget PlayerWidget="PlayerWidget"
+    PlayerData="SignalRService.Data?.Players"
+    CurrentPlayer="GetLocalPlayer()" />
+}
 
 @code {
     private const string HTTPS_ERROR = "HTTPS is not supported! Change to http:// in the address bar.";
@@ -110,6 +120,7 @@
     public bool PlayerWidget { get; set; }
     public bool LootWidget { get; set; }
     public bool MiscWidget { get; set; }
+    private double currentMouseX, currentMouseY;
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,6 +129,13 @@
         LootWidget = await LoadSetting("LootWidget", true);
         MiscWidget = await LoadSetting("MiscWidget", true);
         await LootFilter.LoadSettingsAsync();
+    }
+
+    protected void mouseMoved(MouseEventArgs e)
+    {
+        currentMouseX = e.ClientX;
+        currentMouseY = e.ClientY;
+        StateHasChanged();
     }
 
     private async Task SavePlayerWidgetSetting(ChangeEventArgs e)
@@ -215,7 +233,7 @@
         var filteredLoot = SignalRService.Data?.Loot?.Where(loot => LootFilter.MatchesFilter(loot))
                               ?? Enumerable.Empty<WebRadarLoot>();
 
-        RadarService.Render(args, name, panOffsetX, panOffsetY, filteredLoot, LootFilter);
+        RadarService.Render(args, name, panOffsetX, panOffsetY, filteredLoot, LootFilter, currentMouseX, currentMouseY - 40);
         StateHasChanged();
     }
 
