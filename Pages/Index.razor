@@ -69,18 +69,14 @@
             <input type="checkbox" @bind="MiscWidget" />
             <label title="Enable Misc Widget for additional information.">Misc Widget</label>
         </span>
+
+        <span class="checkbox-group">
+            <input type="checkbox" @bind="RadarService.FreeCam" />
+            <label title="Enable Free Cam">Free Cam</label>
+        </span>
         <a class="rounded-button" href="@($"{Navigation.BaseUri}ESP?host={host}&port={port}&password={password}")" target="_blank" rel="noopener noreferrer">Open ESP</a>
-        @* @if(true) *@
-        @* { *@
-        @*     <p>MouseX = @currentMouseX | Y = @currentMouseY</p> *@
-        @* } *@
-        @* @if (true && RadarService.CurrentMap != null && RadarService.CurrentMapParams != null) *@
-        @* { *@
-        @*     <p>Local Player Location: X = @RadarService.PlayerLocation.X | Y = @RadarService.PlayerLocation.Y | Z = @RadarService.PlayerLocation.Z | *@
-        @*         @RadarService.PlayerLocation.ToMapPos(RadarService.CurrentMap).ToZoomedPos(RadarService.CurrentMapParams) </p> *@
-        @* } *@
     </div>
-    <div @onmousemove="@mouseMoved" class="canvas-wrapper">
+    <div @onmousemove="@mouseMoved"  class="canvas-wrapper">
         <SkiaSharp.Views.Blazor.SKCanvasView OnPaintSurface="OnPaintSurface" class="skia-canvas" EnableRenderLoop="true" />
     </div>
 </div>
@@ -133,8 +129,8 @@
 
     protected void mouseMoved(MouseEventArgs e)
     {
-        currentMouseX = e.ClientX;
-        currentMouseY = e.ClientY;
+        currentMouseX = e.OffsetX;
+        currentMouseY = e.OffsetY;
         StateHasChanged();
     }
 
@@ -228,12 +224,14 @@
         StateHasChanged();
     }
 
-    private void OnPaintSurface(SKPaintSurfaceEventArgs args)
+    private async void OnPaintSurface(SKPaintSurfaceEventArgs args)
     {
         var filteredLoot = SignalRService.Data?.Loot?.Where(loot => LootFilter.MatchesFilter(loot))
                               ?? Enumerable.Empty<WebRadarLoot>();
 
-        RadarService.Render(args, name, panOffsetX, panOffsetY, filteredLoot, LootFilter, currentMouseX, currentMouseY - 40);
+
+        await RadarService.Render(args, name, panOffsetX, panOffsetY, filteredLoot, LootFilter,
+            currentMouseX, currentMouseY, lastMouseX, lastMouseY);
         StateHasChanged();
     }
 
@@ -255,14 +253,17 @@
 
     private void OnMouseDown(MouseEventArgs e)
     {
+        if (!RadarService.FreeCam) return;
+
         isDragging = true;
         lastMouseX = (float)e.ClientX;
         lastMouseY = (float)e.ClientY;
+        StateHasChanged();
     }
 
     private void OnMouseMove(MouseEventArgs e)
     {
-        if (!isDragging) return;
+        if (!isDragging || !RadarService.FreeCam) return;
 
         float deltaX = (float)e.ClientX - lastMouseX;
         float deltaY = (float)e.ClientY - lastMouseY;
@@ -278,6 +279,7 @@
     private void OnMouseUp(MouseEventArgs e)
     {
         isDragging = false;
+        StateHasChanged();
     }
 
 }

@@ -1,0 +1,10 @@
+﻿<div @onclick="() => AncientMountain.Managed.Services.NotificationService.RemoveNotification(Noti)">
+    <h2>@Noti.Message</h2>
+    <h2>@Noti.Level</h2>
+    <h2>@Noti.Message</h2>
+</div>
+
+@code {
+//Add params to be passed in to show
+    [Parameter] public AncientMountain.Managed.Services.Notification Noti { get; set; }
+}

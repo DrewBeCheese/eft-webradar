@@ -70,6 +70,9 @@ namespace AncientMountain.Managed.Services
             public float MouseY { get; set; }
         }
 
+        public string Host { get; set; }
+        public int Port { get; set; }
+
         /// <summary>
         /// Start the SignalR connection.
         /// </summary>
@@ -85,6 +88,8 @@ namespace AncientMountain.Managed.Services
             // Setup new connection
             int port = int.Parse(szPort.Trim());
             var remoteHost = new Uri($"http://{Utils.FormatIPForURL(host)}:{port}/hub/0f908ff7-e614-6a93-60a3-cee36c9cea91?password={Uri.EscapeDataString(password)}");
+            Host = host;
+            Port = port;
 
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl(remoteHost)

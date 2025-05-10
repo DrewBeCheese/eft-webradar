@@ -47,10 +47,23 @@ namespace AncientMountain.Managed.Data
         [Key(5)]
         public bool IsBackpack { get; init; }
 
-        public void Draw(SKCanvas canvas, SKImageInfo info, RadarService.MapParameters mapParams, WebRadarPlayer localPlayer, LootFilterService lootFilter)
+        [Key(6)]
+        public string BsgId { get; init; }
+
+        public void Draw(SKCanvas canvas, SKImageInfo info, RadarService.MapParameters mapParams,
+            WebRadarPlayer localPlayer, LootFilterService lootFilter, SKImage image, SKPoint mousePos)
         {
             try
             {
+                var point = Position.ToMapPos(mapParams.Map).ToZoomedPos(mapParams);
+
+                // Check if the loot is out of map bounds and not visible
+                if (point.X < info.Rect.Left - 15 || point.X > info.Rect.Right + 15 ||
+                    point.Y < info.Rect.Top - 15 || point.Y > info.Rect.Bottom + 15)
+                    return;
+
+                var isHovered = Vector2.Distance(new Vector2(mousePos.X, mousePos.Y), new Vector2(point.X, point.Y)) < 10f;
+
                 // 🚨 Ignore loot if filters are disabled
                 if ((!lootFilter.ShowFood && IsFood) ||
                     (!lootFilter.ShowMeds && IsMeds) ||
@@ -58,11 +71,6 @@ namespace AncientMountain.Managed.Data
                 {
                     return; // Do not render this loot
                 }
-
-                var point = Position.ToMapPos(mapParams.Map).ToZoomedPos(mapParams);
-                if (point.X < info.Rect.Left - 15 || point.X > info.Rect.Right + 15 ||
-                    point.Y < info.Rect.Top - 15 || point.Y > info.Rect.Bottom + 15)
-                    return; // Loot is outside of the map bounds
 
                 var AdjustedPrice = Price / 1000;
 
@@ -78,6 +86,9 @@ namespace AncientMountain.Managed.Data
                 {
                     canvas.DrawLineToPOI(localPlayer, mapParams, point);
                 }
+
+                if (isHovered && image != null)
+                    canvas.DrawImage(image, mousePos);
             }
             catch
             {

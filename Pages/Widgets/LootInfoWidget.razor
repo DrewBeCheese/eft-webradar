@@ -42,7 +42,7 @@
     public bool IsOverWidget(MouseEventArgs e)
     {
         return e.ClientX >= WidgetX && e.ClientX <= WidgetX + 300 &&
-               e.ClientY >= WidgetY && e.ClientY <= WidgetY + (Minimized ? 30 : 250);
+               e.ClientY >= WidgetY && e.ClientY <= WidgetY + 30;
     }
 
     public void OnMouseDown(MouseEventArgs e)
@@ -167,6 +167,10 @@
                     <input type="checkbox" 
                     @bind:get="LootFilter.ShowBackpacks" 
                     @bind:set="value => { LootFilter.ShowBackpacks = value; SaveFilterSettings(); }" /> Show Backpacks
+
+                    <input type="checkbox"
+                           @bind:get="LootFilter.OnlyAmmo"
+                           @bind:set="value => { LootFilter.OnlyAmmo = value; SaveFilterSettings(); }" /> Ammo Only
                 </div>
                 <button @onclick="@(() => LootFilter.ResetFilters())">Clear Filters</button>
                 <table style="cursor: default">

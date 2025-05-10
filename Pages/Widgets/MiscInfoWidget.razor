@@ -51,7 +51,7 @@
     public bool IsOverWidget(MouseEventArgs e)
     {
         return e.ClientX >= WidgetX && e.ClientX <= WidgetX + 300 &&
-               e.ClientY >= WidgetY && e.ClientY <= WidgetY + (Minimized ? 30 : 250);
+               e.ClientY >= WidgetY && e.ClientY <= WidgetY + 30;
     }
 
     public async Task OnMouseDown(MouseEventArgs e)

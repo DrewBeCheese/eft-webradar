@@ -6,11 +6,11 @@ using System.Collections.Frozen;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO.Compression;
+using System.Net;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AncientMountain.Managed.Services
 {
@@ -51,7 +51,10 @@ namespace AncientMountain.Managed.Services
         public Vector3 PlayerLocation { get; set; }
         public bool ShowInteractables { get; set; }
 
+        private Dictionary<string, EDoorState> _doorStates = new();
+
         private static float _scale = 1f;
+        public static bool FreeCam { get; set; }
         /// <summary>
         /// Radar UI Scale Value.
         /// </summary>
@@ -85,8 +88,9 @@ namespace AncientMountain.Managed.Services
         }
         private SKPoint _mousePosition = new SKPoint(0, 0); //TODO: Update this each tick
 
-        public void Render(SKPaintSurfaceEventArgs args, string localPlayerName, float panX, float panY,
-            IEnumerable<WebRadarLoot> filteredLoot, LootFilterService lootFilter, double mouseX, double mouseY)
+        public async Task Render(SKPaintSurfaceEventArgs args, string localPlayerName,
+            float panX, float panY,IEnumerable<WebRadarLoot> filteredLoot, LootFilterService lootFilter,
+            double mouseX, double mouseY, float lastMouseX, float lastMouseY)
         {
             var info = args.Info;
             var canvas = args.Surface.Canvas;
@@ -124,7 +128,7 @@ namespace AncientMountain.Managed.Services
                                 break;
                             var localPlayerPos = localPlayer.Position;
                             var localPlayerMapPos = localPlayerPos.ToMapPos(map);
-                            var mapParams = GetMapParameters(info, map, localPlayerMapPos); // Map auto follow LocalPlayer
+                            var mapParams = GetMapParameters(info, map, FreeCam ? new(lastMouseX + panX, lastMouseY + panY, 0) : localPlayerMapPos); // Map auto follow LocalPlayer
                             CurrentMapParams = mapParams;
                             var mapCanvasBounds = new SKRect() // Drawing Destination
                             {
@@ -152,6 +156,14 @@ namespace AncientMountain.Managed.Services
                                 foreach (var door in data.Doors.Where(x => x.KeyId != null && x.KeyId.Length > 0))
                                 {
                                     door.DrawDoor(canvas, mapParams, _mousePosition, localPlayer);
+                                    _doorStates.TryGetValue(door.Id, out var prevDoorState);
+                                    if (prevDoorState != door.DoorState)
+                                    {
+                                        //NotificationService.PushNotification(
+                                        //    new() { Level = NotificationLevel.Info,
+                                        //        Message = $"{door.Id} changed from {prevDoorState} to {door.DoorState}"});
+                                    }
+                                    _doorStates[door.Id] = door.DoorState;
                                 }
                             }
 
@@ -163,13 +175,15 @@ namespace AncientMountain.Managed.Services
 
                             playerNames = data.Players.Where(x => x.Type == WebPlayerType.LocalPlayer || x.Type == WebPlayerType.Player || x.Type == WebPlayerType.Teammate).Select(x => x.Name);
 
+                            LoadLootIcons(filteredLoot);
                             if (filteredLoot is not null)
                             {
                                 foreach (var lootItem in filteredLoot)
                                 {
                                     if (lootItem.ShortName.StartsWith("Q_"))
                                         continue;
-                                    lootItem.Draw(canvas, info, mapParams, localPlayer, lootFilter);
+                                    _lootIcons.TryGetValue(lootItem.BsgId, out var image);
+                                    lootItem.Draw(canvas, info, mapParams, localPlayer, lootFilter, image, _mousePosition);
                                 }
                             }
                         }
@@ -229,7 +243,7 @@ namespace AncientMountain.Managed.Services
                             localPlayer ??= data.Players.FirstOrDefault();
                             if (localPlayer is null)
                                 break;
-
+                            //LoadLootIcons(filteredLoot);
                             if (filteredLoot is not null)
                             {
                                 foreach (var lootItem in filteredLoot)
@@ -277,25 +291,6 @@ namespace AncientMountain.Managed.Services
                     item.DrawESP(canvas, localPlayer, espUiConfig);
                 }
             }
-        }
-
-        /// <summary>
-        /// Retrieves the currently active map from SignalR data.
-        /// </summary>
-        public Map GetCurrentMap()
-        {
-            if (_sr.Data != null && _sr.Data.InGame && _sr.Data.MapID is string mapID)
-            {
-                if (_maps.TryGetValue(mapID, out var map))
-                {
-                    return map;
-                }
-            }
-            return null; // No valid map found
-        }
-        public void UpdateMousePosition(SKPoint position)
-        {
-            _mousePosition = position;
         }
 
         private readonly Stopwatch _statusSw = Stopwatch.StartNew();
@@ -442,6 +437,40 @@ namespace AncientMountain.Managed.Services
             }
             maps = mapsBuilder.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
         }
+
+        private static Dictionary<string, SKImage> _lootIcons = new();
+        private async Task LoadLootIcons(IEnumerable<WebRadarLoot> items)
+        {
+            List<Task> tasks = [];
+            HttpClient client = null;
+
+            foreach (var item in items)
+            {
+                if (item.BsgId != null && item.BsgId != "NULL" && !_lootIcons.TryGetValue(item.BsgId, out _))
+                {
+                    client ??= new HttpClient();
+                    tasks.Add(DownloadImageAsync(client, item.BsgId, _sr.Host, _sr.Port));
+                }
+            }
+            await Task.WhenAll(tasks);
+            client?.Dispose();
+        }
+
+        private static async Task DownloadImageAsync(HttpClient client, string id, string host, int port)
+        {
+            try
+            {
+                _lootIcons[id] = null; //setting to prevent calling this id again before api returns
+                var imageBytes = await client.GetByteArrayAsync($"http://{Utils.FormatIPForURL(host)}:{port}/{id}-grid-image.webp");
+                var img = SKImage.FromEncodedData(imageBytes);
+                _lootIcons[id] = img;
+            }
+            catch (Exception e)
+            {
+                _lootIcons[id] = null; //Setting so we don't call for this problem item again
+            }
+        }
+
 
         #region Types
 

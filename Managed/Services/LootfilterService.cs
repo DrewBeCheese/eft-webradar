@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Threading.Tasks;
 using AncientMountain.Managed.Data;
 using Microsoft.JSInterop;
@@ -8,9 +9,11 @@ namespace AncientMountain.Managed.Services
     public class LootFilterService
     {
         private readonly IJSRuntime _js;
+        private readonly FrozenDictionary<string, TarkovMarketItem> dict;
 
         public LootFilterService(IJSRuntime js)
         {
+            dict = Utils.GetAllItemDict();
             _js = js;
         }
 
@@ -22,9 +25,18 @@ namespace AncientMountain.Managed.Services
         public string LootSearchQuery { get; set; } = "";
         public HashSet<string> ExcludedItems { get; set; } = new HashSet<string>();
         public string SelectedItemId { get; set; }
+        public bool OnlyAmmo { get; set; }
 
         public bool MatchesFilter(WebRadarLoot loot)
         {
+            var isAmmo = loot.BsgId != null && dict.TryGetValue(loot.BsgId, out var itemData) && itemData.Tags != null && itemData.Tags.Any(x => x.Contains("Ammo"));
+            if (OnlyAmmo && isAmmo)
+            {
+                return true;
+            } else if(OnlyAmmo)
+            {
+                return false;
+            }
             // 🚀 Always show Food, Meds, and Backpacks
             if ((ShowFood && loot.IsFood) || (ShowMeds && loot.IsMeds) || (ShowBackpacks && loot.IsBackpack))
                 return true;
